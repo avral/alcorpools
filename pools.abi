@@ -24,14 +24,6 @@
                 {
                     "name": "to_buy",
                     "type": "asset"
-                },
-                {
-                    "name": "max_asset1",
-                    "type": "asset"
-                },
-                {
-                    "name": "max_asset2",
-                    "type": "asset"
                 }
             ]
         },
@@ -180,14 +172,6 @@
                 {
                     "name": "to_sell",
                     "type": "asset"
-                },
-                {
-                    "name": "min_asset1",
-                    "type": "asset"
-                },
-                {
-                    "name": "min_asset2",
-                    "type": "asset"
                 }
             ]
         },
@@ -240,42 +224,42 @@
         {
             "name": "addliquidity",
             "type": "addliquidity",
-            "ricardian_contract": "---\nspec_version: \"0.2.0\"\ntitle: Add liquidity\nsummary: '{{nowrap user}} buys an evotoken by adding liquidity to pools'\n---\n\n{{user}} agrees to buy the asset {{to_buy}} by paying no more than {{max_asset1}} and {{max_asset2}} to be deducted from {{user}}'s extended balances and added to the token\n{{asset_to_symbol_code to_buy}} pools. The contracts of the assets that {{user}} pays will match the ones of the pools. The asset {{to_buy}} is minted by the contract.\n\nThe first asset to be paid by {{user}} is computed as x + y, where\n\nx = pool1 * {{to_buy}} / supply, up to the precision of the symbol of pool1 rounded upward.\ny = x / 10000, up to the same precision as x, again rounded upward.\nThe variables pool1 and supply denote the values pool1 and supply associated to \nthe token {{asset_to_symbol_code to_buy}} respectively, at the moment of operation.\n\nThe second asset to be paid by {{user}} is computed analogously.\n\nAuthorization of {{user}} is required.\nThe operation is executed only if the amounts to be paid by {{user}} are at most those indicated by {{user}}."
+            "ricardian_contract": ""
         },
         {
             "name": "changefee",
             "type": "changefee",
-            "ricardian_contract": "---\nspec_version: \"0.2.0\"\ntitle: Change fee\nsummary: 'Change the fee value associated to a pair'\n---\n\nThe account fee_contract associated to the token {{pair_token}} authorizes\nto change the fee parameter associated to the same token, to the value {{newfee}}."
+            "ricardian_contract": ""
         },
         {
             "name": "close",
             "type": "close",
-            "ricardian_contract": "---\nspec_version: \"0.2.0\"\ntitle: Close Token Balance\nsummary: 'Close {{nowrap owner}}’s zero quantity balance'\n---\n\n{{owner}} agree to close their zero quantity balance for the {{symbol_to_symbol_code symbol}} token.\n\nRAM will be refunded to the RAM payer of the {{symbol_to_symbol_code symbol}} token balance for {{owner}}."
+            "ricardian_contract": ""
         },
         {
             "name": "inittoken",
             "type": "inittoken",
-            "ricardian_contract": "---\nspec_version: \"0.2.0\"\ntitle: Initialize token\nsummary: 'Initializes an evotoken by setting initial pair of token pools'\n---\n\n{{user}} agrees to initialize a pair token with symbol {{new_symbol}}, with the following initial parameters: pool1 = {{initial_pool1}}, pool2 = {{initial_pool2}}, fee = {{initial_fee}}, fee_contract = {{fee_contract}}. The extended assets {{initial_pool1}} and {{initial_pool2}} will be deducted from the corresponding extended balances of {{user}}.\n\nRAM will be deducted from {{user}}’s resources to create the necessary records.\nAuthorization of {{user}} is required."
+            "ricardian_contract": ""
         },
         {
             "name": "open",
             "type": "open",
-            "ricardian_contract": "---\nspec_version: \"0.2.0\"\ntitle: Open Token Balance\nsummary: 'Open a zero quantity balance for {{nowrap owner}}'\n---\n\n{{ram_payer}} agrees to establish a zero quantity balance for {{owner}} for the {{symbol_to_symbol_code symbol}} token.\n\nIf {{owner}} does not have a balance for {{symbol_to_symbol_code symbol}}, {{ram_payer}} will be designated as the RAM payer of the {{symbol_to_symbol_code symbol}} token balance for {{owner}}. As a result, RAM will be deducted from {{ram_payer}}’s resources to create the necessary records."
+            "ricardian_contract": ""
         },
         {
             "name": "remliquidity",
             "type": "remliquidity",
-            "ricardian_contract": "---\nspec_version: \"0.2.0\"\ntitle: Remove liquidity\nsummary: '{{nowrap user}} sells an evotoken, removing liquidity from pools'\n---\n\n{{user}} agrees to sell the asset {{to_sell}} by receiving at least {{min_asset1}} and {{min_asset2}} to be added to {{user}}'s extended balances and removed from the token\n{{asset_to_symbol_code to_sell}} pools. The asset {{to_sell}} is retired\nfrom circulation by the contract.\n\nThe first asset to be received by {{user}} is computed as\n\npool1 * {{to_sell}} / supply, up to the precision of the symbol of pool1 rounded downward.\n\nThe variables pool1 and supply denote the parameters pool1 and supply associated to the token {{asset_to_symbol_code to_sell}} respectively, at the moment of operation.\n\nThe second asset to be received by {{user}} is computed analogously. \n\nAuthorization of {{user}} is required.\nThe operation is executed only if the amounts to be received by {{user}} are at least\nthose indicated by {{user}}."
+            "ricardian_contract": ""
         },
         {
             "name": "transfer",
             "type": "transfer",
-            "ricardian_contract": "---\nspec_version: \"0.2.0\"\ntitle: Transfer Tokens\nsummary: 'Send {{nowrap quantity}} from {{nowrap from}} to {{nowrap to}}'\n---\n\n(1) {{from}} sends the asset {{quantity}} to {{to}}. {{to}} receives exactly {{quantity}}.The authorization of {{from}} is required.\n\n(2) {{#if memo}} There is a memo attached to the transfer stating: {{memo}}\n{{/if}}\n\n(3) If {{from}} is not already the RAM payer of their {{asset_to_symbol_code quantity}} token balance, {{from}} will be designated as such. As a result, RAM will be deducted from {{from}}’s resources to refund the original RAM payer.\n\n(4) If {{to}} does not have a balance for {{asset_to_symbol_code quantity}}, {{from}} will be designated as the RAM payer of the {{asset_to_symbol_code quantity}} token balance for {{to}}. As a result, RAM will be deducted from {{from}}’s resources to create the necessary records.\n\n(5) The account {{from}} is notified.\n(6) The account {{to}} is notified.\n(7) The account fee_contract corresponding to the token {{asset_to_symbol_code quantity}} is notified."
+            "ricardian_contract": ""
         },
         {
             "name": "withdraw",
             "type": "withdraw",
-            "ricardian_contract": "---\nspec_version: \"0.2.0\"\ntitle: Withdraw\nsummary: 'Withdraw funds from extended balance'\n---\n\n{{user}} agree to withdraw the extended asset {{to_withdraw}} from their account.\n\nIn order to function properly, it is necessary that the contract of {{to_withdraw}} permanently has a transfer action that satisfies the conditions (1), (2), (6) of the present contract's transfer action."
+            "ricardian_contract": ""
         }
     ],
     "tables": [
@@ -308,11 +292,6 @@
             "key_types": []
         }
     ],
-    "ricardian_clauses": [
-        {
-            "id": "UserAgreement",
-            "body": "In order to function properly, the external tokens to be operated by this contract must permanently have a transfer action with input variables {{from}}, {{to}}, {{quantity}}, {{memo}} in that order, satisfying the following three conditions:\n* {{from}} sends the asset {{quantity}} to {{to}}. {{to}} receives exactly {{quantity}}. The authorization of {{from}} is required.\n* {{#if memo}} There is a memo attached to the transfer stating: {{memo}} {{/if}}\n* The account {{to}} is notified.\n\nThe user agrees that the present contract is not responsible for errors occurred in the operation of a pool which involves a token not satisfying the above conditions."
-        }
-    ],
+    "ricardian_clauses": [],
     "variants": []
 }

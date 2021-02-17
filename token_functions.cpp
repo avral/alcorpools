@@ -1,8 +1,8 @@
-#include "evolutiondex.hpp"
+#include "pools.hpp"
 
 using namespace evolution;
 
-void evolutiondex::transfer( const name& from, const name& to, const asset& quantity,
+void pools::transfer( const name& from, const name& to, const asset& quantity,
   const string& memo) {
     check( from != to, "cannot transfer to self" );
     require_auth( from );
@@ -27,7 +27,7 @@ void evolutiondex::transfer( const name& from, const name& to, const asset& quan
     if (to == _self) ontransfer(from, to, quantity, memo); // line added to code from eosio.token
 }
 
-void evolutiondex::sub_balance( const name& owner, const asset& value ) {
+void pools::sub_balance( const name& owner, const asset& value ) {
     accounts from_acnts( _self, owner.value );
 
     const auto& from = from_acnts.get( value.symbol.code().raw(), "no balance object found" );
@@ -38,7 +38,7 @@ void evolutiondex::sub_balance( const name& owner, const asset& value ) {
         });
 }
 
-void evolutiondex::add_balance( const name& owner, const asset& value, const name& ram_payer )
+void pools::add_balance( const name& owner, const asset& value, const name& ram_payer )
 {
     accounts to_acnts( _self, owner.value );
     auto to = to_acnts.find( value.symbol.code().raw() );
@@ -53,7 +53,7 @@ void evolutiondex::add_balance( const name& owner, const asset& value, const nam
     }
 }
 
-void evolutiondex::open( const name& owner, const symbol& symbol, const name& ram_payer )
+void pools::open( const name& owner, const symbol& symbol, const name& ram_payer )
 {
    require_auth( ram_payer );
 
@@ -73,7 +73,7 @@ void evolutiondex::open( const name& owner, const symbol& symbol, const name& ra
    }
 }
 
-void evolutiondex::close( const name& owner, const symbol& symbol )
+void pools::close( const name& owner, const symbol& symbol )
 {
    require_auth( owner );
    accounts acnts( _self, owner.value );

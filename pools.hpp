@@ -13,7 +13,7 @@ typedef __uint128_t uint128_t;
 typedef __int128_t int128_t;
 
 namespace evolution {
-   class [[eosio::contract("evolutiondex")]] evolutiondex : public contract {
+   class [[eosio::contract]] pools : public contract {
       public:
          const int64_t MAX = eosio::asset::max_amount;
          const int64_t INIT_MAX = 1000000000000000;  // 10^15 
@@ -22,7 +22,7 @@ namespace evolution {
 
          using contract::contract;
 
-         evolutiondex(name receiver, name code, datastream<const char*> ds)
+         pools(name receiver, name code, datastream<const char*> ds)
             :contract(receiver, code, ds),
             _pools(receiver, receiver.value){};
 
@@ -37,8 +37,8 @@ namespace evolution {
          //[[eosio::action]] void openext( const name& user, const name& payer, const extended_symbol& ext_symbol);
          //[[eosio::action]] void closeext ( const name& user, const name& to, const extended_symbol& ext_symbol, string memo);
          [[eosio::action]] void withdraw(name user, name to, extended_asset to_withdraw, string memo);
-         [[eosio::action]] void addliquidity(name user, asset to_buy, asset max_asset1, asset max_asset2);
-         [[eosio::action]] void remliquidity(name user, asset to_sell, asset min_asset1, asset min_asset2);
+         [[eosio::action]] void addliquidity(name user, asset to_buy);
+         [[eosio::action]] void remliquidity(name user, asset to_sell);
          //[[eosio::action]] void exchange( name user, symbol_code pair_token, extended_asset ext_asset_in, asset min_expected );
          [[eosio::action]] void changefee(uint64_t pool_id, int newfee);
 
@@ -113,9 +113,10 @@ namespace evolution {
          symbol_code get_free_symbol(string new_symbol);
 
          void add_signed_ext_balance( const name& owner, const extended_asset& value );
-         void add_signed_liq(name user, asset to_buy, bool is_buying, asset max_asset1, asset max_asset2);
+         void add_signed_liq(name user, asset to_buy, bool is_buying);
+			//void remliquidity(name user, asset to_sell);
          void memoexchange(name user, extended_asset ext_asset_in, string_view details);
-         extended_asset process_exch(pools_struct pool, extended_asset paying, asset min_expected);
+         extended_asset process_exch(const pools_struct& pool, extended_asset paying, asset min_expected);
          int64_t compute(int64_t x, int64_t y, int64_t z, int fee);
          asset string_to_asset(string input);
          void add_balance( const name& owner, const asset& value, const name& ram_payer );
