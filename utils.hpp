@@ -4,8 +4,22 @@
 #include <algorithm>
 #include <iterator>
 
+#include <eosio/eosio.hpp>
 #include <eosio/asset.hpp>
 #include "safe.hpp"
+
+using namespace std;
+using namespace eosio;
+
+struct currency_stats {
+   asset    supply;
+   asset    max_supply;
+   name     issuer;
+
+   uint64_t primary_key() const { return supply.symbol.code().raw(); }
+};
+
+typedef eosio::multi_index<"stat"_n, currency_stats> stats;
 
 string_view trim(string_view sv) {
     sv.remove_prefix(std::min(sv.find_first_not_of(" "), sv.size())); // left trim
@@ -52,44 +66,72 @@ void precision_from_decimals(int8_t decimals, T& p10)
     }
 }
 
-asset asset_from_string(string_view from)
-{
-    string_view s = trim(from);
+extended_asset e_asset_from_string(string_view s) {
+   auto at_pos = s.find('@');	
+   check(at_pos != std::string::npos, "Extended asset's asset and contract should be separated with '@'");	
+   
+   auto asset_str = trim(s.substr(0, at_pos));
+   auto contract_str = trim(s.substr(at_pos + 1));	
 
-    // Find space in order to split amount and symbol
-    auto space_pos = s.find(' ');
-    check(space_pos != string::npos, "Asset's amount and symbol should be separated with space");
-    auto symbol_str = trim(s.substr(space_pos + 1));
-    auto amount_str = s.substr(0, space_pos);
+   name contract(contract_str);
+   check(is_account(contract), (string(contract_str) + " account does not exist").c_str());
 
-    // Ensure that if decimal point is used (.), decimal fraction is specified
-    auto dot_pos = amount_str.find('.');
-    if (dot_pos != string::npos) {
-        check(dot_pos != amount_str.size() - 1, "Missing decimal fraction after decimal point");
-    }
+   // Find space in order to split amount and symbol
+   auto space_pos = asset_str.find(' ');
+   check(space_pos != string::npos, "Asset's amount and symbol should be separated with space");
+   
+   auto symbol_str = trim(asset_str.substr(space_pos + 1));
+   auto amount_str = asset_str.substr(0, space_pos);
+   
+   // Ensure that if decimal point is used (.), decimal fraction is specified
+   auto dot_pos = amount_str.find('.');
+   if (dot_pos != string::npos) {
+      check(dot_pos != amount_str.size() - 1, "Missing decimal fraction after decimal point");
+   }
+   
+   // Parse symbol
+   uint8_t precision_digit_str;
 
-    // Parse symbol
-    uint8_t precision_digit = 0;
-    if (dot_pos != string::npos) {
-        precision_digit = amount_str.size() - dot_pos - 1;
-    }
+   if (dot_pos != string::npos) {
+      precision_digit_str = (amount_str.size() - dot_pos - 1);
+   } else {
+      precision_digit_str = 0;
+   }
+   
+   symbol sym(eosio::symbol_code(symbol_str), precision_digit_str);
 
-    symbol sym = symbol(symbol_str, precision_digit);
+   // TODO Через eosio.token.hpp контракт можно
+   stats statstable(contract, sym.code().raw());
+   const auto& st = statstable.get(
+         sym.code().raw(),
+         (string(contract_str) + " contract " + "have not token " + sym.code().to_string()).c_str()
+   );
 
-    // Parse amount
-    safe<int64_t> int_part, fract_part;
-    if (dot_pos != string::npos) {
-        to_int(amount_str.substr(0, dot_pos), int_part);
-        to_int(amount_str.substr(dot_pos + 1), fract_part);
-        if (amount_str[0] == '-') fract_part *= -1;
-    } else {
-        to_int(amount_str, int_part);
-    }
+   check(sym == st.supply.symbol, "symbol precision mismatch");
+   
+   // Parse amount
+   int64_t int_part, fract_part;
+   
+   if (dot_pos != string::npos) {
+      int_part = std::stoll(string(amount_str.substr(0, dot_pos)));
+      fract_part = std::stoll(string(amount_str.substr(dot_pos + 1)));
+      if (amount_str[0] == '-') fract_part *= -1;
+   } else {
+      int_part = std::stoll(string(amount_str));
+   }
+   
+   int64_t amount = int_part;
+   
+   int64_t p = sym.precision();
+   while( p > 0  ) {
+      amount *= 10; --p;
+   }
+   
+   amount += fract_part;
+   asset asset(amount, sym);
 
-    safe<int64_t> amount = int_part;
-    safe<int64_t> precision; precision_from_decimals(sym.precision(), precision);
-    amount *= precision;
-    amount += fract_part;
-
-    return asset(amount.value, sym);
+   check(asset.is_valid(), "invalid quantity");
+   check(asset.amount >= 0, "zero amount not allowed");
+   
+   return extended_asset(asset, contract);
 }
