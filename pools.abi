@@ -92,6 +92,46 @@
             ]
         },
         {
+            "name": "exchangelog",
+            "base": "",
+            "fields": [
+                {
+                    "name": "l",
+                    "type": "exchangerecord"
+                }
+            ]
+        },
+        {
+            "name": "exchangerecord",
+            "base": "",
+            "fields": [
+                {
+                    "name": "pair_id",
+                    "type": "uint64"
+                },
+                {
+                    "name": "maker",
+                    "type": "name"
+                },
+                {
+                    "name": "quantity_in",
+                    "type": "asset"
+                },
+                {
+                    "name": "quantity_out",
+                    "type": "asset"
+                },
+                {
+                    "name": "pool1",
+                    "type": "asset"
+                },
+                {
+                    "name": "pool2",
+                    "type": "asset"
+                }
+            ]
+        },
+        {
             "name": "inittoken",
             "base": "",
             "fields": [
@@ -114,6 +154,54 @@
                 {
                     "name": "fee_contract",
                     "type": "name"
+                }
+            ]
+        },
+        {
+            "name": "liquiditylog",
+            "base": "",
+            "fields": [
+                {
+                    "name": "l",
+                    "type": "liquidityrecord"
+                }
+            ]
+        },
+        {
+            "name": "liquidityrecord",
+            "base": "",
+            "fields": [
+                {
+                    "name": "pair_id",
+                    "type": "uint64"
+                },
+                {
+                    "name": "lp_token",
+                    "type": "asset"
+                },
+                {
+                    "name": "owner",
+                    "type": "name"
+                },
+                {
+                    "name": "liquidity1",
+                    "type": "asset"
+                },
+                {
+                    "name": "liquidity2",
+                    "type": "asset"
+                },
+                {
+                    "name": "pool1",
+                    "type": "asset"
+                },
+                {
+                    "name": "pool2",
+                    "type": "asset"
+                },
+                {
+                    "name": "supply",
+                    "type": "asset"
                 }
             ]
         },
@@ -219,8 +307,18 @@
             "ricardian_contract": ""
         },
         {
+            "name": "exchangelog",
+            "type": "exchangelog",
+            "ricardian_contract": ""
+        },
+        {
             "name": "inittoken",
             "type": "inittoken",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "liquiditylog",
+            "type": "liquiditylog",
             "ricardian_contract": ""
         },
         {
