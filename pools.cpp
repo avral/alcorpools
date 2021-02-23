@@ -25,15 +25,6 @@ void pools::ontransfer(name from, name to, asset quantity, string memo) {
    }
 }
 
-void pools::withdraw(name user, name to, extended_asset to_withdraw, string memo) {
-    require_auth( user );
-    check(to_withdraw.quantity.amount > 0, "quantity must be positive");
-
-    add_signed_ext_balance(user, -to_withdraw);
-    action(permission_level{ _self, "active"_n }, to_withdraw.contract, "transfer"_n,
-      std::make_tuple( _self, to, to_withdraw.quantity, memo) ).send();
-}
-
 void pools::addliquidity(name user, asset to_buy) {
     require_auth(user);
     check( (to_buy.amount > 0), "to_buy amount must be positive");
@@ -48,7 +39,7 @@ void pools::remliquidity(name user, asset to_sell) {
 
     stats statstable(_self, to_sell.symbol.code().raw());
     const auto& pool_token = statstable.get(to_sell.symbol.code().raw(), "pool token does not exist" );
-    const auto& pool = _pools.get(pool_token.pool_id, "Pool not found from token");
+    const auto& pool = _pairs.get(pool_token.pool_id, "Pool not found from token");
 	 
     evodexacnts acnts( _self, user.value );
     auto index = acnts.get_index<"extended"_n>();
@@ -91,54 +82,65 @@ int64_t pools::compute(int64_t x, int64_t y, int64_t z, int fee) {
 }
 
 void pools::add_signed_liq(name user, asset to_add, bool is_buying) {
-    check( to_add.is_valid(), "invalid asset");
+   check( to_add.is_valid(), "invalid asset");
 
-    stats statstable( _self, to_add.symbol.code().raw() );
-    const auto& pool_token = statstable.get( to_add.symbol.code().raw(), "pool token does not exist" );
+   stats statstable( _self, to_add.symbol.code().raw() );
+   const auto& pool_token = statstable.get( to_add.symbol.code().raw(), "pool token does not exist" );
 
-    const auto& pool = _pools.get(pool_token.pool_id, "Pool not found from token");
+   const auto& pair = _pairs.get(pool_token.pool_id, "Pool not found from token");
 
-    auto A = pool_token.supply.amount;
-    auto P1 = pool.pool1.quantity.amount;
-    auto P2 = pool.pool2.quantity.amount;
+   auto A = pool_token.supply.amount;
+   auto P1 = pair.pool1.quantity.amount;
+   auto P2 = pair.pool2.quantity.amount;
 
-    int fee = is_buying? ADD_LIQUIDITY_FEE : 0;
-    auto to_pay1 = extended_asset{ asset{compute(to_add.amount, P1, A, fee),
-      pool.pool1.quantity.symbol}, pool.pool1.contract};
-    auto to_pay2 = extended_asset{ asset{compute(to_add.amount, P2, A, fee),
-      pool.pool2.quantity.symbol}, pool.pool2.contract};
+   //int fee = is_buying? ADD_LIQUIDITY_FEE : 0;
+   int fee = 0;
+   auto to_pay1 = extended_asset{ asset{compute(to_add.amount, P1, A, fee),
+     pair.pool1.quantity.symbol}, pair.pool1.contract};
+   auto to_pay2 = extended_asset{ asset{compute(to_add.amount, P2, A, fee),
+     pair.pool2.quantity.symbol}, pair.pool2.contract};
 
-    add_signed_ext_balance(user, -to_pay1);
-    add_signed_ext_balance(user, -to_pay2);
+   //check(false, "to_pay1(" + to_pay1.quantity.to_string() + "), to_pay2(" + to_pay2.quantity.to_string() + ")");
 
-    (to_add.amount > 0) ? add_balance(user, to_add, user) : sub_balance(user, -to_add);
+   add_signed_ext_balance(user, -to_pay1);
+   add_signed_ext_balance(user, -to_pay2);
 
-    if (pool.fee_contract) require_recipient(pool.fee_contract);
+   (to_add.amount > 0) ? add_balance(user, to_add, user) : sub_balance(user, -to_add);
 
-    statstable.modify(pool_token, same_payer, [&]( auto& a ) {
-      a.supply += to_add;
-    });
+   if (pair.fee_contract) require_recipient(pair.fee_contract);
 
-    _pools.modify(pool, same_payer, [&]( auto& a ) {
-      a.pool1 += to_pay1;
-      a.pool2 += to_pay2;
-    });
+   statstable.modify(pool_token, same_payer, [&]( auto& a ) {
+     a.supply += to_add;
+   });
 
-    check(pool_token.supply.amount != 0, "the pool cannot be left empty");
+   _pairs.modify(pair, same_payer, [&]( auto& a ) {
+     a.supply += to_add;
+     a.pool1 += to_pay1;
+     a.pool2 += to_pay2;
+   });
+
+   check(pool_token.supply.amount != 0, "the pair cannot be left empty");
+
+   // Log
+   action(
+      permission_level{_self, "active"_n},
+      _self,
+      "liquiditylog"_n,
+      make_tuple(liquidityrecord{
+         .pair_id = pair.id,
+         .lp_token = to_add,
+         .owner = user,
+         .liquidity1 = to_pay1,
+         .liquidity2 = to_pay2,
+         .pool1 = pair.pool1.quantity,
+         .pool2 = pair.pool2.quantity,
+         .supply = pair.supply,
+      })
+   ).send();
+    
 }
 
-//void pools::exchange( name user, symbol_code pair_token, 
-//  extended_asset ext_asset_in, asset min_expected) {
-//    require_auth(user);
-//    check( ((ext_asset_in.quantity.amount > 0) && (min_expected.amount >= 0)) ||
-//           ((ext_asset_in.quantity.amount < 0) && (min_expected.amount <= 0)), 
-//           "ext_asset_in must be nonzero and min_expected must have same sign or be zero");
-//    auto ext_asset_out = process_exch(pair_token, ext_asset_in, min_expected);
-//    add_signed_ext_balance(user, -ext_asset_in);
-//    add_signed_ext_balance(user, ext_asset_out);
-//}
-
-extended_asset pools::process_exch(const pools_struct& pool, extended_asset ext_asset_in, asset min_expected) {
+extended_asset pools::process_exch(const pairs_struct& pool, extended_asset ext_asset_in, asset min_expected) {
     bool in_first;
     if ((pool.pool1.get_extended_symbol() == ext_asset_in.get_extended_symbol()) && 
         (pool.pool2.quantity.symbol == min_expected.symbol)) {
@@ -171,7 +173,7 @@ extended_asset pools::process_exch(const pools_struct& pool, extended_asset ext_
 
     check(min_expected.amount <= -A_out, "available(" + ext_asset_out.quantity.to_string() +  ") is less than expected");
 
-    _pools.modify(pool, same_payer, [&]( auto& a ) {
+    _pairs.modify(pool, same_payer, [&]( auto& a ) {
       a.pool1 += ext_asset1;
       a.pool2 += ext_asset2;
     });
@@ -185,25 +187,39 @@ void pools::memoexchange(name user, extended_asset ext_asset_in, string_view det
 
    extended_asset min_expected = e_asset_from_string(parts[0]);
 
-   auto index = _pools.get_index<"extended"_n>();
-   const auto& pool = index.get(
+   auto index = _pairs.get_index<"extended"_n>();
+   const auto& pair = index.get(
       make256key(
          ext_asset_in.contract.value, ext_asset_in.quantity.symbol.code().raw(),
          min_expected.contract.value, min_expected.quantity.symbol.code().raw()
       ), "Pool not exists!"
    );
 
-    // TODO Тут вычисляем из двух ассетов какой это пул
-
    auto second_comma_pos = details.find(",", 1 + details.find(","));
    auto memo = (second_comma_pos == string::npos) ? "" : details.substr(1 + second_comma_pos);
 
    check(min_expected.quantity.amount >= 0, "min_expected must be expressed with a positive amount");
 
-   auto ext_asset_out = process_exch(pool, ext_asset_in, min_expected.quantity);
+   auto ext_asset_out = process_exch(pair, ext_asset_in, min_expected.quantity);
 
    action(permission_level{ _self, "active"_n }, ext_asset_out.contract, "transfer"_n,
      std::make_tuple( _self, user, ext_asset_out.quantity, std::string(memo)) ).send();
+
+   // Log
+   action(
+      permission_level{_self, "active"_n},
+      _self,
+      "exchangelog"_n,
+      make_tuple(exchangerecord{
+         .pair_id = pair.id,
+         .maker = user,
+         .quantity_in = ext_asset_in.quantity,
+         .quantity_out = ext_asset_out.quantity,
+         .pool1 = pair.pool1.quantity,
+         .pool2 = pair.pool2.quantity,
+      })
+   ).send();
+
 }
 
 symbol_code pools::get_free_symbol(string new_symbol) {
@@ -244,7 +260,7 @@ extended_asset initial_pool2, int initial_fee, name fee_contract)
    check( initial_pool1.get_extended_symbol() != initial_pool2.get_extended_symbol(), "extended symbols must be different");
 
    // Check if pool exists
-   auto index = _pools.get_index<"extended"_n>();
+   auto index = _pairs.get_index<"extended"_n>();
    const auto& pool_exists = index.find(make256key(
       initial_pool1.contract.value, initial_pool1.quantity.symbol.code().raw(),
       initial_pool2.contract.value, initial_pool2.quantity.symbol.code().raw()));
@@ -271,13 +287,14 @@ extended_asset initial_pool2, int initial_fee, name fee_contract)
    check ( token == statstable.end(), "token symbol already exists" );
    check( initial_fee == DEFAULT_FEE, "initial_fee must be 10");
 
-   uint64_t new_pool_id = _pools.available_primary_key();
-   _pools.emplace( user, [&]( auto& a ) {
+   uint64_t new_pool_id = _pairs.available_primary_key();
+   _pairs.emplace( user, [&]( auto& a ) {
       a.id = new_pool_id;
       a.pool1 = initial_pool1;
       a.pool2 = initial_pool2;
       a.fee = initial_fee;
       a.fee_contract = fee_contract;
+		a.supply = new_token;
    });
 
    statstable.emplace( user, [&]( auto& a ) {
@@ -293,9 +310,9 @@ extended_asset initial_pool2, int initial_fee, name fee_contract)
 }
 
 void pools::changefee(uint64_t pool_id, int newfee) {
-    const auto& pool = _pools.get(pool_id, "does not exist");
+    const auto& pool = _pairs.get(pool_id, "does not exist");
     require_auth(pool.fee_contract);
-    _pools.modify(pool, same_payer, [&]( auto& a ) {
+    _pairs.modify(pool, same_payer, [&]( auto& a ) {
       a.fee = newfee;
     });
 }
@@ -313,26 +330,26 @@ checksum256 pools::make256key(uint64_t a, uint64_t b, uint64_t c, uint64_t d) {
       return checksum256::make_from_word_sequence<uint64_t>(c,d,a,b);
 }
 
-void pools::add_signed_ext_balance( const name& user, const extended_asset& to_add )
-{
-    check( to_add.quantity.is_valid(), "invalid asset" );
-    evodexacnts acnts( _self, user.value );
-    auto index = acnts.get_index<"extended"_n>();
-    const auto& acnt_balance = index.find( make128key(to_add.contract.value, to_add.quantity.symbol.raw() ) );
+void pools::add_signed_ext_balance(const name& user, const extended_asset& to_add) {
+   check(to_add.quantity.is_valid(), "invalid asset");
+   evodexacnts acnts( _self, user.value );
+   auto index = acnts.get_index<"extended"_n>();
+   const auto& acnt_balance = index.find(make128key(to_add.contract.value, to_add.quantity.symbol.raw()));
 
-    if (acnt_balance == index.end()) {
-		 acnts.emplace(_self, [&]( auto& a ) {
-			a.id = acnts.available_primary_key();
-         a.balance = to_add;
-       });
-    } else {
-		 if (acnt_balance->balance.quantity.amount == 0) {
-			 index.erase(acnt_balance);
-		 } else {
-			 index.modify( acnt_balance, same_payer, [&]( auto& a ) {
-				  a.balance += to_add;
-				  check( a.balance.quantity.amount > 0, "insufficient funds");
-			 });
-		 }
-    }
+   if (acnt_balance == index.end()) {
+	   acnts.emplace(_self, [&]( auto& a ) {
+	  	a.id = acnts.available_primary_key();
+        a.balance = to_add;
+		  check( a.balance.quantity.amount > 0, "insufficient funds: " + to_add.quantity.to_string());
+      });
+   } else {
+		if ((acnt_balance->balance.quantity.amount + to_add.quantity.amount) == 0) {
+			index.erase(acnt_balance);
+	   } else {
+			index.modify( acnt_balance, same_payer, [&]( auto& a ) {
+				a.balance += to_add;
+		      check( a.balance.quantity.amount > 0, "insufficient funds: " + to_add.quantity.to_string());
+			});
+		}
+	}
 }

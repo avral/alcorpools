@@ -136,12 +136,16 @@
             ]
         },
         {
-            "name": "pools_struct",
+            "name": "pairs_struct",
             "base": "",
             "fields": [
                 {
                     "name": "id",
                     "type": "uint64"
+                },
+                {
+                    "name": "supply",
+                    "type": "asset"
                 },
                 {
                     "name": "pool1",
@@ -196,28 +200,6 @@
                     "type": "string"
                 }
             ]
-        },
-        {
-            "name": "withdraw",
-            "base": "",
-            "fields": [
-                {
-                    "name": "user",
-                    "type": "name"
-                },
-                {
-                    "name": "to",
-                    "type": "name"
-                },
-                {
-                    "name": "to_withdraw",
-                    "type": "extended_asset"
-                },
-                {
-                    "name": "memo",
-                    "type": "string"
-                }
-            ]
         }
     ],
     "actions": [
@@ -255,11 +237,6 @@
             "name": "transfer",
             "type": "transfer",
             "ricardian_contract": ""
-        },
-        {
-            "name": "withdraw",
-            "type": "withdraw",
-            "ricardian_contract": ""
         }
     ],
     "tables": [
@@ -278,8 +255,8 @@
             "key_types": []
         },
         {
-            "name": "pools",
-            "type": "pools_struct",
+            "name": "pairs",
+            "type": "pairs_struct",
             "index_type": "i64",
             "key_names": [],
             "key_types": []

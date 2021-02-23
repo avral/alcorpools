@@ -100,7 +100,6 @@ extended_asset e_asset_from_string(string_view s) {
    
    symbol sym(eosio::symbol_code(symbol_str), precision_digit_str);
 
-   // TODO Через eosio.token.hpp контракт можно
    stats statstable(contract, sym.code().raw());
    const auto& st = statstable.get(
          sym.code().raw(),
