@@ -96,7 +96,7 @@
             "base": "",
             "fields": [
                 {
-                    "name": "l",
+                    "name": "record",
                     "type": "exchangerecord"
                 }
             ]
@@ -162,7 +162,7 @@
             "base": "",
             "fields": [
                 {
-                    "name": "l",
+                    "name": "record",
                     "type": "liquidityrecord"
                 }
             ]
@@ -346,7 +346,7 @@
             "key_types": []
         },
         {
-            "name": "evodexacnts",
+            "name": "deposits",
             "type": "evodexaccount",
             "index_type": "i64",
             "key_names": [],

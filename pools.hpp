@@ -54,8 +54,8 @@ namespace evolution {
             _pairs(receiver, receiver.value){};
 
          // Logs
-         [[eosio::action]] void exchangelog(exchangerecord l) { require_auth(_self); }
-         [[eosio::action]] void liquiditylog(liquidityrecord l) { require_auth(_self); }
+         [[eosio::action]] void exchangelog(exchangerecord record) { require_auth(_self); }
+         [[eosio::action]] void liquiditylog(liquidityrecord record) { require_auth(_self); }
 
          // Pools
          [[eosio::on_notify("*::transfer")]] void ontransfer(name from, name to, asset quantity, string memo);
@@ -118,12 +118,11 @@ namespace evolution {
             uint64_t secondary_key() const { return pool_id; }
          };
 
-
          typedef eosio::multi_index< "pairs"_n, pairs_struct,
          indexed_by<"extended"_n, const_mem_fun<pairs_struct, checksum256, 
            &pairs_struct::secondary_key>> > pairs_index;
 
-         typedef eosio::multi_index< "evodexacnts"_n, evodexaccount,
+         typedef eosio::multi_index< "deposits"_n, evodexaccount,
          indexed_by<"extended"_n, const_mem_fun<evodexaccount, uint128_t, 
            &evodexaccount::secondary_key>> > evodexacnts;
 

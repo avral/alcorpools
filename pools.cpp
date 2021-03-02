@@ -307,6 +307,17 @@ extended_asset initial_pool2, int initial_fee, name fee_contract)
    add_balance(user, new_token, user);
    add_signed_ext_balance(user, -initial_pool1);
    add_signed_ext_balance(user, -initial_pool2);
+
+   make_tuple(liquidityrecord{
+      .pair_id = new_pool_id,
+      .lp_token = new_token,
+      .owner = user,
+      .liquidity1 = initial_pool1.quantity,
+      .liquidity2 = initial_pool2.quantity,
+      .pool1 = initial_pool1.quantity,
+      .pool2 = initial_pool2.quantity,
+      .supply = new_token
+   });
 }
 
 void pools::changefee(uint64_t pool_id, int newfee) {

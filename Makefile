@@ -7,8 +7,8 @@ contract_name=pools
 
 # LOCAL DEV MODE
 # contract_account=dex TODO migrate old contract
-cleos_path=cleos
-contract_account=pools
+#cleos_path=cleos
+#contract_account=pools
 
 # WAX
 #cleos_path=cleos -u https://wax.greymass.com
@@ -28,8 +28,11 @@ contract_account=pools
 
 # JUNGLE TESTNET
 #cleos_path=cleos -u https://api.jungle3.alohaeos.com
-#contract_account=alcordexmain
+#contract_account=alcorpoolsex
 
+# WAX TESTNET
+cleos_path=cleos -u https://waxtestnet.greymass.com
+contract_account=alcordexswap
 
 unlock_wallet:
 	$(cleos_path) wallet unlock --password $(wallet_pasword)
