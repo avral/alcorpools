@@ -27,12 +27,12 @@ contract_name=pools
 #contract_account=alcor
 
 # JUNGLE TESTNET
-#cleos_path=cleos -u https://api.jungle3.alohaeos.com
-#contract_account=alcorpoolsex
+cleos_path=cleos -u https://api.jungle3.alohaeos.com
+contract_account=alcorammpool
 
 # WAX TESTNET
-cleos_path=cleos -u https://waxtestnet.greymass.com
-contract_account=alcordexswap
+#cleos_path=cleos -u https://waxtestnet.greymass.com
+#contract_account=alcorammpool
 
 unlock_wallet:
 	$(cleos_path) wallet unlock --password $(wallet_pasword)
