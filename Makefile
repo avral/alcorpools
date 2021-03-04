@@ -28,7 +28,7 @@ contract_name=pools
 
 # JUNGLE TESTNET
 cleos_path=cleos -u https://api.jungle3.alohaeos.com
-contract_account=alcorammpool
+contract_account=alcorammswap
 
 # WAX TESTNET
 #cleos_path=cleos -u https://waxtestnet.greymass.com

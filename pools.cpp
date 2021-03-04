@@ -1,3 +1,5 @@
+#include <algorithm>
+
 #include "pools.hpp"
 #include "utils.hpp"
 #include "token_functions.cpp"
@@ -27,7 +29,7 @@ void pools::ontransfer(name from, name to, asset quantity, string memo) {
 
 void pools::addliquidity(name user, asset to_buy) {
     require_auth(user);
-    check( (to_buy.amount > 0), "to_buy amount must be positive");
+    check(to_buy.amount > 0, "to_buy amount must be positive");
     add_signed_liq(user, to_buy, true);
 }
 
@@ -107,7 +109,7 @@ void pools::add_signed_liq(name user, asset to_add, bool is_buying) {
 
    (to_add.amount > 0) ? add_balance(user, to_add, user) : sub_balance(user, -to_add);
 
-   if (pair.fee_contract) require_recipient(pair.fee_contract);
+   //if (pair.fee_contract) require_recipient(pair.fee_contract);
 
    statstable.modify(pool_token, same_payer, [&]( auto& a ) {
      a.supply += to_add;
@@ -137,7 +139,6 @@ void pools::add_signed_liq(name user, asset to_add, bool is_buying) {
          .supply = pair.supply,
       })
    ).send();
-    
 }
 
 extended_asset pools::process_exch(const pairs_struct& pool, extended_asset ext_asset_in, asset min_expected) {
@@ -195,10 +196,8 @@ void pools::memoexchange(name user, extended_asset ext_asset_in, string_view det
       ), "Pool not exists!"
    );
 
-   auto second_comma_pos = details.find(",", 1 + details.find(","));
-   auto memo = (second_comma_pos == string::npos) ? "" : details.substr(1 + second_comma_pos);
-
-   check(min_expected.quantity.amount >= 0, "min_expected must be expressed with a positive amount");
+   auto memo = (parts.size() == 1) ? "" : parts[1];
+   check(min_expected.quantity.amount >= 0, "min_expected must be expressed with a positive or zero amount");
 
    auto ext_asset_out = process_exch(pair, ext_asset_in, min_expected.quantity);
 
@@ -219,7 +218,6 @@ void pools::memoexchange(name user, extended_asset ext_asset_in, string_view det
          .pool2 = pair.pool2.quantity,
       })
    ).send();
-
 }
 
 symbol_code pools::get_free_symbol(string new_symbol) {
@@ -276,7 +274,8 @@ extended_asset initial_pool2, int initial_fee, name fee_contract)
    new_symbol_str = first_code.to_string() + second_code.to_string(); 
 
    if (first_code.length() + second_code.length() > 7) {
-      new_symbol_str = first_code.to_string().substr(0, 4) + second_code.to_string().substr(0, 3); 
+      const string first_path = first_code.to_string().substr(0, 4);
+      new_symbol_str = first_path + second_code.to_string().substr(0, 7 - first_path.length());
    }
 
    auto new_token = asset{int64_t(geometric_mean), symbol(get_free_symbol(new_symbol_str), new_precision)};
@@ -285,7 +284,7 @@ extended_asset initial_pool2, int initial_fee, name fee_contract)
    stats statstable( _self, new_token.symbol.code().raw() );
    const auto& token = statstable.find( new_token.symbol.code().raw() );
    check ( token == statstable.end(), "token symbol already exists" );
-   check( initial_fee == DEFAULT_FEE, "initial_fee must be 10");
+   check( initial_fee == DEFAULT_FEE, "initial_fee must be 30");
 
    uint64_t new_pool_id = _pairs.available_primary_key();
    _pairs.emplace( user, [&]( auto& a ) {
