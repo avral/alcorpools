@@ -12,7 +12,7 @@ contract_name=pools
 
 # WAX
 #cleos_path=cleos -u https://wax.greymass.com
-#contract_account=alcordexmain
+#contract_account=alcorammswap
 
 # TELOS
 #cleos_path=cleos -u https://api.telos.alohaeos.com
@@ -20,7 +20,7 @@ contract_name=pools
 
 # EOS mainnet
 #cleos_path=cleos -u https://api.main.alohaeos.com:443
-#contract_account=eostokensdex
+#contract_account=alcorammswap
 
 # PROTON
 #cleos_path=cleos -u https://proton.cryptolions.io

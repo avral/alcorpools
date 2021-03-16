@@ -196,13 +196,17 @@ void pools::memoexchange(name user, extended_asset ext_asset_in, string_view det
       ), "Pool not exists!"
    );
 
-   auto memo = (parts.size() == 1) ? "" : parts[1];
    check(min_expected.quantity.amount >= 0, "min_expected must be expressed with a positive or zero amount");
+
+   name send_to = parts.size() > 1 ? name(parts[1]) : user;
+   auto memo = (parts.size() > 2) ? parts[2] : "";
 
    auto ext_asset_out = process_exch(pair, ext_asset_in, min_expected.quantity);
 
+   // TODO Multipath swap here
+
    action(permission_level{ _self, "active"_n }, ext_asset_out.contract, "transfer"_n,
-     std::make_tuple( _self, user, ext_asset_out.quantity, std::string(memo)) ).send();
+     std::make_tuple( _self, send_to, ext_asset_out.quantity, std::string(memo)) ).send();
 
    // Log
    action(
