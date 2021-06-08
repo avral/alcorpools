@@ -11,12 +11,12 @@ contract_name=pools
 #contract_account=pools
 
 # WAX
-#cleos_path=cleos -u https://wax.greymass.com
-#contract_account=alcorammswap
+cleos_path=cleos -u https://wax.cryptolions.io
+contract_account=alcorammswap
 
 # TELOS
 #cleos_path=cleos -u https://api.telos.alohaeos.com
-#contract_account=eostokensdex
+#contract_account=alcorammswap
 
 # EOS mainnet
 #cleos_path=cleos -u https://api.main.alohaeos.com:443
@@ -27,8 +27,8 @@ contract_name=pools
 #contract_account=alcor
 
 # JUNGLE TESTNET
-cleos_path=cleos -u https://api.jungle3.alohaeos.com
-contract_account=alcorammswap
+#cleos_path=cleos -u https://api.jungle3.alohaeos.com
+#contract_account=alcorammswap
 
 # WAX TESTNET
 #cleos_path=cleos -u https://waxtestnet.greymass.com
