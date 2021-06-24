@@ -27,10 +27,36 @@ void pools::ontransfer(name from, name to, asset quantity, string memo) {
    }
 }
 
+void pools:refundremain(name user, uint64_t pool_id) {
+    const auto& pool = _pairs.get(pool_id, "Pool not found from token");
+
+    evodexacnts acnts( _self, user.value );
+    auto index = acnts.get_index<"extended"_n>();
+
+    const auto& balance1 = index.find(make128key(pool.pool1.contract.value, pool.pool1.quantity.symbol.raw()));
+    const auto& balance2 = index.find(make128key(pool.pool2.contract.value, pool.pool2.quantity.symbol.raw()));
+
+	 if (balance1 != index.end()) {
+		 action(permission_level{ _self, "active"_n }, balance1->balance.contract, "transfer"_n,
+			std::make_tuple( _self, user, balance1->balance.quantity, string("refund"))).send();
+
+		 add_signed_ext_balance(user, -balance1->balance);
+	 }
+
+	 if (balance2 != index.end()) {
+		 action(permission_level{ _self, "active"_n }, balance2->balance.contract, "transfer"_n,
+			std::make_tuple( _self, user, balance2->balance.quantity, string("refund"))).send();
+
+		 add_signed_ext_balance(user, -balance2->balance);
+	 }
+}
+
 void pools::addliquidity(name user, asset to_buy) {
     require_auth(user);
     check(to_buy.amount > 0, "to_buy amount must be positive");
+
     add_signed_liq(user, to_buy, true);
+    refundremain(user, to_buy.symbol);
 }
 
 void pools::remliquidity(name user, asset to_sell) {

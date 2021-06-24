@@ -138,6 +138,8 @@ namespace evolution {
          static checksum256 make256key(uint64_t a, uint64_t b, uint64_t c, uint64_t d);
          symbol_code get_free_symbol(string new_symbol);
 
+         void refundremain(name user, uint64_t pool_id);
+
          void add_signed_ext_balance( const name& owner, const extended_asset& value );
          void add_signed_liq(name user, asset to_buy, bool is_buying);
 			//void remliquidity(name user, asset to_sell);

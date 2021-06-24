@@ -11,8 +11,8 @@ contract_name=pools
 #contract_account=pools
 
 # WAX
-cleos_path=cleos -u https://wax.cryptolions.io
-contract_account=alcorammswap
+#cleos_path=cleos -u https://wax.cryptolions.io
+#contract_account=alcorammswap
 
 # TELOS
 #cleos_path=cleos -u https://api.telos.alohaeos.com
