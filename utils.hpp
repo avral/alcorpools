@@ -109,7 +109,8 @@ extended_asset e_asset_from_string(string_view s) {
    check(sym == st.supply.symbol, "symbol precision mismatch");
    
    // Parse amount
-   int64_t int_part, fract_part;
+   int64_t int_part = 0;
+   int64_t fract_part = 0;
    
    if (dot_pos != string::npos) {
       int_part = std::stoll(string(amount_str.substr(0, dot_pos)));

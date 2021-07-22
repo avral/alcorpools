@@ -7,12 +7,12 @@ contract_name=pools
 
 # LOCAL DEV MODE
 # contract_account=dex TODO migrate old contract
-cleos_path=cleos
-contract_account=pools
+#cleos_path=cleos
+#contract_account=pools
 
 # WAX
-#cleos_path=cleos -u https://wax.cryptolions.io
-#contract_account=alcorammswap
+cleos_path=cleos -u https://wax.cryptolions.io
+contract_account=alcorammswap
 
 # TELOS
 #cleos_path=cleos -u https://api.telos.alohaeos.com
