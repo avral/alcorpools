@@ -27,7 +27,7 @@ void pools::ontransfer(name from, name to, asset quantity, string memo) {
    }
 }
 
-void pools:refundremain(name user, uint64_t pool_id) {
+void pools::refundremain(name user, uint64_t pool_id) {
     const auto& pool = _pairs.get(pool_id, "Pool not found from token");
 
     evodexacnts acnts( _self, user.value );
@@ -38,14 +38,14 @@ void pools:refundremain(name user, uint64_t pool_id) {
 
 	 if (balance1 != index.end()) {
 		 action(permission_level{ _self, "active"_n }, balance1->balance.contract, "transfer"_n,
-			std::make_tuple( _self, user, balance1->balance.quantity, string("refund"))).send();
+			std::make_tuple( _self, user, balance1->balance.quantity, string("refund liquidity slippage"))).send();
 
 		 add_signed_ext_balance(user, -balance1->balance);
 	 }
 
 	 if (balance2 != index.end()) {
 		 action(permission_level{ _self, "active"_n }, balance2->balance.contract, "transfer"_n,
-			std::make_tuple( _self, user, balance2->balance.quantity, string("refund"))).send();
+			std::make_tuple( _self, user, balance2->balance.quantity, string("refund liquidity slippage"))).send();
 
 		 add_signed_ext_balance(user, -balance2->balance);
 	 }
@@ -56,7 +56,11 @@ void pools::addliquidity(name user, asset to_buy) {
     check(to_buy.amount > 0, "to_buy amount must be positive");
 
     add_signed_liq(user, to_buy, true);
-    refundremain(user, to_buy.symbol);
+
+    stats statstable( _self, to_buy.symbol.code().raw() );
+    const auto& pool_token = statstable.get( to_buy.symbol.code().raw(), "pool token does not exist" );
+
+    refundremain(user, pool_token.pool_id);
 }
 
 void pools::remliquidity(name user, asset to_sell) {
