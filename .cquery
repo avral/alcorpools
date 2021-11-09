@@ -13,8 +13,10 @@
 -pthread
 
 # Includes
--I/usr/local/Cellar/eosio.cdt/1.7.0/opt/eosio.cdt/include/eosiolib/capi
--I/usr/local/Cellar/eosio.cdt/1.7.0/opt/eosio.cdt/include/eosiolib/core
--I/usr/local/Cellar/eosio.cdt/1.7.0/opt/eosio.cdt/include/eosiolib/contracts
--I/usr/local/Cellar/eosio.cdt/1.7.0/opt/eosio.cdt/include/eosiolib/native
+-I/usr/local/Cellar/blanc/0.11.0/opt/blanc/include
+
+#-I/usr/local/Cellar/eosio.cdt/1.8.0/opt/eosio.cdt/include/eosiolib/capi
+#-I/usr/local/Cellar/eosio.cdt/1.8.0/opt/eosio.cdt/include/eosiolib/core
+#-I/usr/local/Cellar/eosio.cdt/1.8.0/opt/eosio.cdt/include/eosiolib/contracts
+#-I/usr/local/Cellar/eosio.cdt/1.8.0/opt/eosio.cdt/include/eosiolib/native
 # -I space_is_not_allowed

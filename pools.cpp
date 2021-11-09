@@ -67,12 +67,12 @@ void pools::remliquidity(name user, asset to_sell) {
     require_auth(user);
     check(to_sell.amount > 0, "to_sell amount must be positive");
 
-    add_signed_liq(user, -to_sell, false);
-
     stats statstable(_self, to_sell.symbol.code().raw());
     const auto& pool_token = statstable.get(to_sell.symbol.code().raw(), "pool token does not exist" );
     const auto& pool = _pairs.get(pool_token.pool_id, "Pool not found from token");
 	 
+    add_signed_liq(user, -to_sell, false);
+
     evodexacnts acnts( _self, user.value );
     auto index = acnts.get_index<"extended"_n>();
 
@@ -113,7 +113,7 @@ int64_t pools::compute(int64_t x, int64_t y, int64_t z, int fee) {
     return int64_t(tmp);
 }
 
-void pools::add_signed_liq(name user, asset to_add, bool is_buying) {
+void pools::add_signed_liq(name user, asset to_add, bool is_adding) {
    check( to_add.is_valid(), "invalid asset");
 
    stats statstable( _self, to_add.symbol.code().raw() );
@@ -134,8 +134,8 @@ void pools::add_signed_liq(name user, asset to_add, bool is_buying) {
 
    //check(false, "to_pay1(" + to_pay1.quantity.to_string() + "), to_pay2(" + to_pay2.quantity.to_string() + ")");
 
-   add_signed_ext_balance(user, -to_pay1);
-   add_signed_ext_balance(user, -to_pay2);
+   add_signed_ext_balance(user, -to_pay1, is_adding);
+   add_signed_ext_balance(user, -to_pay2, is_adding);
 
    (to_add.amount > 0) ? add_balance(user, to_add, user) : sub_balance(user, -to_add);
 
@@ -150,8 +150,6 @@ void pools::add_signed_liq(name user, asset to_add, bool is_buying) {
      a.pool1 += to_pay1;
      a.pool2 += to_pay2;
    });
-
-   check(pool_token.supply.amount != 0, "the pair cannot be left empty");
 
    // Log
    action(
@@ -169,6 +167,10 @@ void pools::add_signed_liq(name user, asset to_add, bool is_buying) {
          .supply = pair.supply,
       })
    ).send();
+
+   if (pool_token.supply.amount == 0) {
+      _pairs.erase(pair);
+   }
 }
 
 extended_asset pools::process_exch(const pairs_struct& pool, extended_asset ext_asset_in, asset min_expected) {
@@ -380,14 +382,16 @@ checksum256 pools::make256key(uint64_t a, uint64_t b, uint64_t c, uint64_t d) {
       return checksum256::make_from_word_sequence<uint64_t>(c,d,a,b);
 }
 
-void pools::add_signed_ext_balance(const name& user, const extended_asset& to_add) {
+void pools::add_signed_ext_balance(const name& user, const extended_asset& to_add, bool user_paying) {
    check(to_add.quantity.is_valid(), "invalid asset");
    evodexacnts acnts( _self, user.value );
    auto index = acnts.get_index<"extended"_n>();
    const auto& acnt_balance = index.find(make128key(to_add.contract.value, to_add.quantity.symbol.raw()));
 
    if (acnt_balance == index.end()) {
-	   acnts.emplace(_self, [&]( auto& a ) {
+      auto payer = user_paying ? user : _self;
+	   acnts.emplace(user, [&]( auto& a ) {
+
 	  	a.id = acnts.available_primary_key();
         a.balance = to_add;
 		  check( a.balance.quantity.amount > 0, "insufficient funds: " + to_add.quantity.to_string());

@@ -140,7 +140,7 @@ namespace evolution {
 
          void refundremain(name user, uint64_t pool_id);
 
-         void add_signed_ext_balance( const name& owner, const extended_asset& value );
+         void add_signed_ext_balance( const name& owner, const extended_asset& value, bool user_paying = false );
          void add_signed_liq(name user, asset to_buy, bool is_buying);
 			//void remliquidity(name user, asset to_sell);
          void memoexchange(name user, extended_asset ext_asset_in, string_view details);
