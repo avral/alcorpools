@@ -388,9 +388,9 @@ void pools::add_signed_ext_balance(const name& user, const extended_asset& to_ad
    auto index = acnts.get_index<"extended"_n>();
    const auto& acnt_balance = index.find(make128key(to_add.contract.value, to_add.quantity.symbol.raw()));
 
+   auto payer = user_paying ? user : _self;
    if (acnt_balance == index.end()) {
-      auto payer = user_paying ? user : _self;
-	   acnts.emplace(user, [&]( auto& a ) {
+	   acnts.emplace(payer, [&]( auto& a ) {
 
 	  	a.id = acnts.available_primary_key();
         a.balance = to_add;
@@ -400,7 +400,7 @@ void pools::add_signed_ext_balance(const name& user, const extended_asset& to_ad
 		if ((acnt_balance->balance.quantity.amount + to_add.quantity.amount) == 0) {
 			index.erase(acnt_balance);
 	   } else {
-			index.modify( acnt_balance, same_payer, [&]( auto& a ) {
+			index.modify( acnt_balance, payer, [&]( auto& a ) {
 				a.balance += to_add;
 		      check( a.balance.quantity.amount > 0, "insufficient funds: " + to_add.quantity.to_string());
 			});
