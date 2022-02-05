@@ -125,8 +125,8 @@ void pools::add_signed_liq(name user, asset to_add, bool is_adding) {
    auto P1 = pair.pool1.quantity.amount;
    auto P2 = pair.pool2.quantity.amount;
 
-   //int fee = is_buying? ADD_LIQUIDITY_FEE : 0;
-   int fee = 0;
+   int fee = is_adding ? ADD_LIQUIDITY_FEE : 0;
+
    auto to_pay1 = extended_asset{ asset{compute(to_add.amount, P1, A, fee),
      pair.pool1.quantity.symbol}, pair.pool1.contract};
    auto to_pay2 = extended_asset{ asset{compute(to_add.amount, P2, A, fee),
