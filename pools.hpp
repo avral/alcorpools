@@ -5,6 +5,7 @@
 #include <eosio/system.hpp>
 #include <eosio/print.hpp>
 #include <cmath>
+#include "helper.hpp"
 
 using namespace eosio;
 using namespace std;
@@ -74,6 +75,8 @@ namespace evolution {
          [[eosio::action]] void open( const name& owner, const symbol& symbol, const name& ram_payer );
          [[eosio::action]] void close( const name& owner, const symbol& symbol );
 
+         [[eosio::action]] void migratepool(uint64_t poolId, uint128_t sqrtPriceX64);
+         [[eosio::action]] void migrateuser(uint64_t poolId, std::vector<name> users);
       private:
          struct [[eosio::table]] account {
             asset    balance;
@@ -149,5 +152,7 @@ namespace evolution {
          asset string_to_asset(string input);
          void add_balance( const name& owner, const asset& value, const name& ram_payer );
          void sub_balance( const name& owner, const asset& value );
+
+         void contract_is_maintaining();
    };
 }

@@ -206,6 +206,34 @@
             ]
         },
         {
+            "name": "migratepool",
+            "base": "",
+            "fields": [
+                {
+                    "name": "poolId",
+                    "type": "uint64"
+                },
+                {
+                    "name": "sqrtPriceX64",
+                    "type": "uint128"
+                }
+            ]
+        },
+        {
+            "name": "migrateuser",
+            "base": "",
+            "fields": [
+                {
+                    "name": "poolId",
+                    "type": "uint64"
+                },
+                {
+                    "name": "users",
+                    "type": "name[]"
+                }
+            ]
+        },
+        {
             "name": "open",
             "base": "",
             "fields": [
@@ -319,6 +347,16 @@
         {
             "name": "liquiditylog",
             "type": "liquiditylog",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "migratepool",
+            "type": "migratepool",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "migrateuser",
+            "type": "migrateuser",
             "ricardian_contract": ""
         },
         {
