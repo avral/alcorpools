@@ -294,6 +294,24 @@
             ]
         },
         {
+            "name": "logmigration",
+            "base": "",
+            "fields": [
+                {
+                    "name": "poolId",
+                    "type": "uint64"
+                },
+                {
+                    "name": "users",
+                    "type": "name"
+                },
+                {
+                    "name": "message",
+                    "type": "string"
+                }
+            ]
+        },
+        {
             "name": "migratepool",
             "base": "",
             "fields": [
@@ -435,6 +453,11 @@
         {
             "name": "liquiditylog",
             "type": "liquiditylog",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "logmigration",
+            "type": "logmigration",
             "ricardian_contract": ""
         },
         {

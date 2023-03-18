@@ -422,7 +422,7 @@ void pools::migrateuser(uint64_t poolId, std::vector<name> users){
                   std::make_tuple( _self, alcor_swap, balance1_itr->balance.quantity, string("deposit-") + user.to_string())).send();
 
                add_signed_ext_balance(user, -balance1_itr->balance);
-               check(tokenADesired.quantity.symbol() == balance1_itr->balance.quantity.symbol, "sanity check");
+               check(tokenADesired.quantity.symbol == balance1_itr->balance.quantity.symbol, "sanity check");
                tokenADesired.quantity = balance1_itr->balance.quantity; 
             }
 
@@ -431,7 +431,7 @@ void pools::migrateuser(uint64_t poolId, std::vector<name> users){
                   std::make_tuple( _self, alcor_swap, balance2_itr->balance.quantity, string("deposit-") + user.to_string())).send();
 
                add_signed_ext_balance(user, -balance2_itr->balance);
-               check(tokenBDesired.quantity.symbol() == balance2_itr->balance.quantity.symbol, "sanity check");
+               check(tokenBDesired.quantity.symbol == balance2_itr->balance.quantity.symbol, "sanity check");
                tokenBDesired.quantity = balance2_itr->balance.quantity;
             }
 
@@ -452,6 +452,10 @@ void pools::migrateuser(uint64_t poolId, std::vector<name> users){
                // create liquidity on alcorswap
                action(permission_level{get_self(), name("active")}, alcor_swap, name("addliquid"),
                      std::make_tuple(pool.id, user, tokenADesired, tokenBDesired, MIN_TICK, MAX_TICK, tokenAMin,tokenBDesired, 0))
+                  .send();
+
+               action(permission_level{get_self(), name("active")}, alcor_swap, name("logmigration"),
+                     std::make_tuple(poolId, user, std::string("Your liqudity was migrated to AlcorV2 for better capital efficiency and accuracy. Please visit https://alcor.exchange to see your updated liquidity")))
                   .send();
             }
          }

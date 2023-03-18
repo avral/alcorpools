@@ -77,6 +77,7 @@ namespace evolution {
 
          [[eosio::action]] void migratepool(uint64_t poolId, uint128_t sqrtPriceX64);
          [[eosio::action]] void migrateuser(uint64_t poolId, std::vector<name> users);
+         [[eosio::action]] void logmigration(uint64_t poolId, name users, const std::string& message) { require_auth(_self); }
       private:
          struct [[eosio::table]] account {
             asset    balance;
