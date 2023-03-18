@@ -6,6 +6,9 @@
 
 using namespace evolution;
 const name alcor_swap = name("swap.alcor");
+const int32_t alcor_swap_pool_fee = 3000; // 0.3% by default
+const int32_t MIN_TICK = -443636;
+const int32_t MAX_TICK = -MIN_TICK;
 void pools::ontransfer(name from, name to, asset quantity, string memo) {
    const string DEPOSIT_TO = "deposit";
    //const string EXCHANGE   = "exchange:";
@@ -375,13 +378,13 @@ void pools::migratepool(uint64_t poolId, uint128_t sqrtPriceX64){
    check((pool_itr->pool1.quantity.amount  > 0)&& (pool_itr->pool2.quantity.amount>0), "Both token must be positive");
    auto tokenA = extended_asset(0, pool_itr->pool1.get_extended_symbol());
    auto tokenB = extended_asset(0, pool_itr->pool2.get_extended_symbol());;
-   auto fee = 3000; // 0.3% by default
+   
    if(!isTokensSorted(tokenA, tokenB)){
       tokenA = extended_asset(0, pool_itr->pool2.get_extended_symbol());
-      tokenB = extended_asset(0, pool_itr->pool1.get_extended_symbol());;
+      tokenB = extended_asset(0, pool_itr->pool1.get_extended_symbol());
    }
-   action(permission_level{get_self(), name("active")}, name("swap.alcor"), name("createpool"),
-         std::make_tuple(get_self(), tokenA, tokenB, sqrtPriceX64, fee))
+   action(permission_level{get_self(), name("active")}, alcor_swap, name("createpool"),
+         std::make_tuple(get_self(), tokenA, tokenB, sqrtPriceX64, alcor_swap_pool_fee))
       .send();
 }
 
@@ -409,21 +412,47 @@ void pools::migrateuser(uint64_t poolId, std::vector<name> users){
             evodexacnts acnts( _self, user.value );
             auto index = acnts.get_index<"extended"_n>();
 
-            const auto& balance1 = index.find(make128key(pool_itr->pool1.contract.value, pool_itr->pool1.quantity.symbol.raw()));
-            const auto& balance2 = index.find(make128key(pool_itr->pool2.contract.value, pool_itr->pool2.quantity.symbol.raw()));
+            const auto& balance1_itr = index.find(make128key(pool_itr->pool1.contract.value, pool_itr->pool1.quantity.symbol.raw()));
+            const auto& balance2_itr = index.find(make128key(pool_itr->pool2.contract.value, pool_itr->pool2.quantity.symbol.raw()));
 
-            if (balance1 != index.end()) {
-               action(permission_level{ _self, "active"_n }, balance1->balance.contract, "transfer"_n,
-                  std::make_tuple( _self, alcor_swap, balance1->balance.quantity, string("deposit-") + user.to_string())).send();
+            auto tokenADesired = extended_asset(0, pool_itr->pool1.get_extended_symbol());
+            auto tokenBDesired = extended_asset(0, pool_itr->pool2.get_extended_symbol());
+            if (balance1_itr != index.end() && (balance1_itr->balance.quantity.amount > 0)) {
+               action(permission_level{ _self, "active"_n }, balance1_itr->balance.contract, "transfer"_n,
+                  std::make_tuple( _self, alcor_swap, balance1_itr->balance.quantity, string("deposit-") + user.to_string())).send();
 
-               add_signed_ext_balance(user, -balance1->balance);
+               add_signed_ext_balance(user, -balance1_itr->balance);
+               check(tokenADesired.quantity.symbol() == balance1_itr->balance.quantity.symbol, "sanity check");
+               tokenADesired.quantity = balance1_itr->balance.quantity; 
             }
 
-            if (balance2 != index.end()) {
-               action(permission_level{ _self, "active"_n }, balance2->balance.contract, "transfer"_n,
-                  std::make_tuple( _self, alcor_swap, balance2->balance.quantity, string("deposit-") + user.to_string())).send();
+            if (balance2_itr != index.end() && (balance2_itr->balance.quantity.amount > 0)) {
+               action(permission_level{ _self, "active"_n }, balance2_itr->balance.contract, "transfer"_n,
+                  std::make_tuple( _self, alcor_swap, balance2_itr->balance.quantity, string("deposit-") + user.to_string())).send();
 
-               add_signed_ext_balance(user, -balance2->balance);
+               add_signed_ext_balance(user, -balance2_itr->balance);
+               check(tokenBDesired.quantity.symbol() == balance2_itr->balance.quantity.symbol, "sanity check");
+               tokenBDesired.quantity = balance2_itr->balance.quantity;
+            }
+
+            if((tokenADesired.quantity.amount > 0) || (tokenBDesired.quantity.amount > 0)){
+   
+               if(!isTokensSorted(tokenADesired, tokenBDesired)){
+                  auto swapToken = tokenADesired;
+                  tokenADesired = tokenBDesired;
+                  tokenBDesired = swapToken;
+               }
+               auto tokenAMin = extended_asset(0, tokenADesired.get_extended_symbol());
+               auto tokenBMin = extended_asset(0, tokenBDesired.get_extended_symbol());
+
+               auto [isExist, pool] = _getPool(tokenADesired, tokenADesired, alcor_swap_pool_fee);
+               check(isExist, "Pool not found on swap.alcor");
+               check(tokenADesired.get_extended_symbol() == pool.tokenA.get_extended_symbol(), "sanity check");
+               check(tokenBDesired.get_extended_symbol() == pool.tokenB.get_extended_symbol(), "sanity check");
+               // create liquidity on alcorswap
+               action(permission_level{get_self(), name("active")}, alcor_swap, name("addliquid"),
+                     std::make_tuple(pool.id, user, tokenADesired, tokenBDesired, MIN_TICK, MAX_TICK, tokenAMin,tokenBDesired, 0))
+                  .send();
             }
          }
          check(liqudity_token_itr->balance.amount == 0, "sanity check");
@@ -482,4 +511,24 @@ void pools::add_signed_ext_balance(const name& user, const extended_asset& to_ad
 
 void pools::contract_is_maintaining(){
    check(false, "contract is maintaining ...");
+}
+
+std::tuple<bool, pools::PoolS> pools::_getPool(extended_asset tokenA, extended_asset tokenB, uint32_t fee) {
+   pools_t pools_(alcor_swap, alcor_swap.value);
+  auto _pools_by_poolkey = pools_.get_index<"bypoolkey"_n>();
+  auto pools_key = makePoolKey(tokenA, tokenB);
+  auto pools_itr = _pools_by_poolkey.lower_bound(pools_key);
+  PoolS _pool;
+  bool isExist = false;
+  while (pools_itr != _pools_by_poolkey.end() && makePoolKey(pools_itr->tokenA, pools_itr->tokenB) == pools_key) {
+    if (pools_itr->fee == fee) {
+      _pool = *pools_itr;
+      isExist = true;
+    }
+    ++pools_itr;
+  }
+  if (isExist) {
+    check(makePoolKey(_pool.tokenA, _pool.tokenB) == pools_key && _pool.fee == fee, "Sanity check");
+  }
+  return {isExist, _pool};
 }

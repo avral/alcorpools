@@ -4,6 +4,94 @@
     "types": [],
     "structs": [
         {
+            "name": "CurrSlotS",
+            "base": "",
+            "fields": [
+                {
+                    "name": "sqrtPriceX64",
+                    "type": "uint128"
+                },
+                {
+                    "name": "tick",
+                    "type": "int32"
+                },
+                {
+                    "name": "lastObservationTimestamp",
+                    "type": "uint32"
+                },
+                {
+                    "name": "currentObservationNum",
+                    "type": "uint32"
+                },
+                {
+                    "name": "maxObservationNum",
+                    "type": "uint32"
+                }
+            ]
+        },
+        {
+            "name": "PoolS",
+            "base": "",
+            "fields": [
+                {
+                    "name": "id",
+                    "type": "uint64"
+                },
+                {
+                    "name": "active",
+                    "type": "bool"
+                },
+                {
+                    "name": "tokenA",
+                    "type": "extended_asset"
+                },
+                {
+                    "name": "tokenB",
+                    "type": "extended_asset"
+                },
+                {
+                    "name": "fee",
+                    "type": "uint32"
+                },
+                {
+                    "name": "feeProtocol",
+                    "type": "uint8"
+                },
+                {
+                    "name": "tickSpacing",
+                    "type": "int32"
+                },
+                {
+                    "name": "maxLiquidityPerTick",
+                    "type": "uint64"
+                },
+                {
+                    "name": "currSlot",
+                    "type": "CurrSlotS"
+                },
+                {
+                    "name": "feeGrowthGlobalAX64",
+                    "type": "uint64"
+                },
+                {
+                    "name": "feeGrowthGlobalBX64",
+                    "type": "uint64"
+                },
+                {
+                    "name": "protocolFeeA",
+                    "type": "asset"
+                },
+                {
+                    "name": "protocolFeeB",
+                    "type": "asset"
+                },
+                {
+                    "name": "liquidity",
+                    "type": "uint64"
+                }
+            ]
+        },
+        {
             "name": "account",
             "base": "",
             "fields": [
@@ -393,6 +481,13 @@
         {
             "name": "pairs",
             "type": "pairs_struct",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "pools",
+            "type": "PoolS",
             "index_type": "i64",
             "key_names": [],
             "key_types": []
