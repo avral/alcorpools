@@ -445,7 +445,7 @@ void pools::migrateuser(uint64_t poolId, std::vector<name> users){
                auto tokenAMin = extended_asset(0, tokenADesired.get_extended_symbol());
                auto tokenBMin = extended_asset(0, tokenBDesired.get_extended_symbol());
 
-               auto [isExist, pool] = _getPool(tokenADesired, tokenADesired, alcor_swap_pool_fee);
+               auto [isExist, pool] = _getPool(tokenADesired, tokenBDesired, alcor_swap_pool_fee);
                check(isExist, "Pool not found on swap.alcor");
                check(tokenADesired.get_extended_symbol() == pool.tokenA.get_extended_symbol(), "sanity check");
                check(tokenBDesired.get_extended_symbol() == pool.tokenB.get_extended_symbol(), "sanity check");
