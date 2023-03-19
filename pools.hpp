@@ -41,7 +41,7 @@ struct liquidityrecord {
 };
 
 namespace evolution {
-   class [[eosio::contract]] pools : public contract {
+   class [[eosio::contract]] pools_migration : public contract {
       public:
          const int64_t MAX = eosio::asset::max_amount;
          const int64_t INIT_MAX = 1000000000000000;  // 10^15 
@@ -50,7 +50,7 @@ namespace evolution {
 
          using contract::contract;
 
-         pools(name receiver, name code, datastream<const char*> ds)
+         pools_migration(name receiver, name code, datastream<const char*> ds)
             :contract(receiver, code, ds),
             _pairs(receiver, receiver.value){};
 

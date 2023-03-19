@@ -1,0 +1,530 @@
+{
+    "____comment": "This file was generated with eosio-abigen. DO NOT EDIT ",
+    "version": "eosio::abi/1.2",
+    "types": [],
+    "structs": [
+        {
+            "name": "CurrSlotS",
+            "base": "",
+            "fields": [
+                {
+                    "name": "sqrtPriceX64",
+                    "type": "uint128"
+                },
+                {
+                    "name": "tick",
+                    "type": "int32"
+                },
+                {
+                    "name": "lastObservationTimestamp",
+                    "type": "uint32"
+                },
+                {
+                    "name": "currentObservationNum",
+                    "type": "uint32"
+                },
+                {
+                    "name": "maxObservationNum",
+                    "type": "uint32"
+                }
+            ]
+        },
+        {
+            "name": "PoolS",
+            "base": "",
+            "fields": [
+                {
+                    "name": "id",
+                    "type": "uint64"
+                },
+                {
+                    "name": "active",
+                    "type": "bool"
+                },
+                {
+                    "name": "tokenA",
+                    "type": "extended_asset"
+                },
+                {
+                    "name": "tokenB",
+                    "type": "extended_asset"
+                },
+                {
+                    "name": "fee",
+                    "type": "uint32"
+                },
+                {
+                    "name": "feeProtocol",
+                    "type": "uint8"
+                },
+                {
+                    "name": "tickSpacing",
+                    "type": "int32"
+                },
+                {
+                    "name": "maxLiquidityPerTick",
+                    "type": "uint64"
+                },
+                {
+                    "name": "currSlot",
+                    "type": "CurrSlotS"
+                },
+                {
+                    "name": "feeGrowthGlobalAX64",
+                    "type": "uint64"
+                },
+                {
+                    "name": "feeGrowthGlobalBX64",
+                    "type": "uint64"
+                },
+                {
+                    "name": "protocolFeeA",
+                    "type": "asset"
+                },
+                {
+                    "name": "protocolFeeB",
+                    "type": "asset"
+                },
+                {
+                    "name": "liquidity",
+                    "type": "uint64"
+                }
+            ]
+        },
+        {
+            "name": "account",
+            "base": "",
+            "fields": [
+                {
+                    "name": "balance",
+                    "type": "asset"
+                }
+            ]
+        },
+        {
+            "name": "addliquidity",
+            "base": "",
+            "fields": [
+                {
+                    "name": "user",
+                    "type": "name"
+                },
+                {
+                    "name": "to_buy",
+                    "type": "asset"
+                }
+            ]
+        },
+        {
+            "name": "changefee",
+            "base": "",
+            "fields": [
+                {
+                    "name": "pool_id",
+                    "type": "uint64"
+                },
+                {
+                    "name": "newfee",
+                    "type": "int32"
+                }
+            ]
+        },
+        {
+            "name": "close",
+            "base": "",
+            "fields": [
+                {
+                    "name": "owner",
+                    "type": "name"
+                },
+                {
+                    "name": "symbol",
+                    "type": "symbol"
+                }
+            ]
+        },
+        {
+            "name": "currency_stats",
+            "base": "",
+            "fields": [
+                {
+                    "name": "supply",
+                    "type": "asset"
+                },
+                {
+                    "name": "max_supply",
+                    "type": "asset"
+                },
+                {
+                    "name": "issuer",
+                    "type": "name"
+                },
+                {
+                    "name": "pool_id",
+                    "type": "uint64"
+                }
+            ]
+        },
+        {
+            "name": "evodexaccount",
+            "base": "",
+            "fields": [
+                {
+                    "name": "balance",
+                    "type": "extended_asset"
+                },
+                {
+                    "name": "id",
+                    "type": "uint64"
+                }
+            ]
+        },
+        {
+            "name": "exchangelog",
+            "base": "",
+            "fields": [
+                {
+                    "name": "record",
+                    "type": "exchangerecord"
+                }
+            ]
+        },
+        {
+            "name": "exchangerecord",
+            "base": "",
+            "fields": [
+                {
+                    "name": "pair_id",
+                    "type": "uint64"
+                },
+                {
+                    "name": "maker",
+                    "type": "name"
+                },
+                {
+                    "name": "quantity_in",
+                    "type": "asset"
+                },
+                {
+                    "name": "quantity_out",
+                    "type": "asset"
+                },
+                {
+                    "name": "pool1",
+                    "type": "asset"
+                },
+                {
+                    "name": "pool2",
+                    "type": "asset"
+                }
+            ]
+        },
+        {
+            "name": "inittoken",
+            "base": "",
+            "fields": [
+                {
+                    "name": "user",
+                    "type": "name"
+                },
+                {
+                    "name": "initial_pool1",
+                    "type": "extended_asset"
+                },
+                {
+                    "name": "initial_pool2",
+                    "type": "extended_asset"
+                },
+                {
+                    "name": "initial_fee",
+                    "type": "int32"
+                },
+                {
+                    "name": "fee_contract",
+                    "type": "name"
+                }
+            ]
+        },
+        {
+            "name": "liquiditylog",
+            "base": "",
+            "fields": [
+                {
+                    "name": "record",
+                    "type": "liquidityrecord"
+                }
+            ]
+        },
+        {
+            "name": "liquidityrecord",
+            "base": "",
+            "fields": [
+                {
+                    "name": "pair_id",
+                    "type": "uint64"
+                },
+                {
+                    "name": "lp_token",
+                    "type": "asset"
+                },
+                {
+                    "name": "owner",
+                    "type": "name"
+                },
+                {
+                    "name": "liquidity1",
+                    "type": "asset"
+                },
+                {
+                    "name": "liquidity2",
+                    "type": "asset"
+                },
+                {
+                    "name": "pool1",
+                    "type": "asset"
+                },
+                {
+                    "name": "pool2",
+                    "type": "asset"
+                },
+                {
+                    "name": "supply",
+                    "type": "asset"
+                }
+            ]
+        },
+        {
+            "name": "logmigration",
+            "base": "",
+            "fields": [
+                {
+                    "name": "poolId",
+                    "type": "uint64"
+                },
+                {
+                    "name": "users",
+                    "type": "name"
+                },
+                {
+                    "name": "message",
+                    "type": "string"
+                }
+            ]
+        },
+        {
+            "name": "migratepool",
+            "base": "",
+            "fields": [
+                {
+                    "name": "poolId",
+                    "type": "uint64"
+                },
+                {
+                    "name": "sqrtPriceX64",
+                    "type": "uint128"
+                }
+            ]
+        },
+        {
+            "name": "migrateuser",
+            "base": "",
+            "fields": [
+                {
+                    "name": "poolId",
+                    "type": "uint64"
+                },
+                {
+                    "name": "users",
+                    "type": "name[]"
+                }
+            ]
+        },
+        {
+            "name": "open",
+            "base": "",
+            "fields": [
+                {
+                    "name": "owner",
+                    "type": "name"
+                },
+                {
+                    "name": "symbol",
+                    "type": "symbol"
+                },
+                {
+                    "name": "ram_payer",
+                    "type": "name"
+                }
+            ]
+        },
+        {
+            "name": "pairs_struct",
+            "base": "",
+            "fields": [
+                {
+                    "name": "id",
+                    "type": "uint64"
+                },
+                {
+                    "name": "supply",
+                    "type": "asset"
+                },
+                {
+                    "name": "pool1",
+                    "type": "extended_asset"
+                },
+                {
+                    "name": "pool2",
+                    "type": "extended_asset"
+                },
+                {
+                    "name": "fee",
+                    "type": "int32"
+                },
+                {
+                    "name": "fee_contract",
+                    "type": "name"
+                }
+            ]
+        },
+        {
+            "name": "remliquidity",
+            "base": "",
+            "fields": [
+                {
+                    "name": "user",
+                    "type": "name"
+                },
+                {
+                    "name": "to_sell",
+                    "type": "asset"
+                }
+            ]
+        },
+        {
+            "name": "transfer",
+            "base": "",
+            "fields": [
+                {
+                    "name": "from",
+                    "type": "name"
+                },
+                {
+                    "name": "to",
+                    "type": "name"
+                },
+                {
+                    "name": "quantity",
+                    "type": "asset"
+                },
+                {
+                    "name": "memo",
+                    "type": "string"
+                }
+            ]
+        }
+    ],
+    "actions": [
+        {
+            "name": "addliquidity",
+            "type": "addliquidity",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "changefee",
+            "type": "changefee",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "close",
+            "type": "close",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "exchangelog",
+            "type": "exchangelog",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "inittoken",
+            "type": "inittoken",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "liquiditylog",
+            "type": "liquiditylog",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "logmigration",
+            "type": "logmigration",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "migratepool",
+            "type": "migratepool",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "migrateuser",
+            "type": "migrateuser",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "open",
+            "type": "open",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "remliquidity",
+            "type": "remliquidity",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "transfer",
+            "type": "transfer",
+            "ricardian_contract": ""
+        }
+    ],
+    "tables": [
+        {
+            "name": "accounts",
+            "type": "account",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "deposits",
+            "type": "evodexaccount",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "pairs",
+            "type": "pairs_struct",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "pools",
+            "type": "PoolS",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "stat",
+            "type": "currency_stats",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        }
+    ],
+    "kv_tables": {},
+    "ricardian_clauses": [],
+    "variants": [],
+    "action_results": []
+}

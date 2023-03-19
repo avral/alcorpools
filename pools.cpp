@@ -7,9 +7,9 @@
 using namespace evolution;
 const name alcor_swap = name("swap.alcor");
 const int32_t alcor_swap_pool_fee = 3000; // 0.3% by default
-const int32_t MIN_TICK = -443636;
-const int32_t MAX_TICK = -MIN_TICK;
-void pools::ontransfer(name from, name to, asset quantity, string memo) {
+const int32_t USABLE_MIN_TICK = -443580;
+const int32_t USABLE_MAX_TICK = -USABLE_MIN_TICK;
+void pools_migration::ontransfer(name from, name to, asset quantity, string memo) {
    const string DEPOSIT_TO = "deposit";
    //const string EXCHANGE   = "exchange:";
    //const string WITHDRAW   = "exchange:";
@@ -31,7 +31,7 @@ void pools::ontransfer(name from, name to, asset quantity, string memo) {
    }
 }
 
-void pools::refundremain(name user, uint64_t pool_id) {
+void pools_migration::refundremain(name user, uint64_t pool_id) {
     const auto& pool = _pairs.get(pool_id, "Pool not found from token");
 
     evodexacnts acnts( _self, user.value );
@@ -55,7 +55,7 @@ void pools::refundremain(name user, uint64_t pool_id) {
 	 }
 }
 
-void pools::addliquidity(name user, asset to_buy) {
+void pools_migration::addliquidity(name user, asset to_buy) {
    contract_is_maintaining();
 
     require_auth(user);
@@ -69,7 +69,7 @@ void pools::addliquidity(name user, asset to_buy) {
     refundremain(user, pool_token.pool_id);
 }
 
-void pools::remliquidity(name user, asset to_sell) {
+void pools_migration::remliquidity(name user, asset to_sell) {
    contract_is_maintaining();
 
     require_auth(user);
@@ -103,7 +103,7 @@ void pools::remliquidity(name user, asset to_sell) {
 }
 
 // computes x * y / z plus the fee
-int64_t pools::compute(int64_t x, int64_t y, int64_t z, int fee) {
+int64_t pools_migration::compute(int64_t x, int64_t y, int64_t z, int fee) {
     check( (x != 0) && (y > 0) && (z > 0), "invalid parameters");
     int128_t prod = int128_t(x) * int128_t(y);
     int128_t tmp = 0;
@@ -121,7 +121,7 @@ int64_t pools::compute(int64_t x, int64_t y, int64_t z, int fee) {
     return int64_t(tmp);
 }
 
-void pools::add_signed_liq(name user, asset to_add, bool is_adding) {
+void pools_migration::add_signed_liq(name user, asset to_add, bool is_adding) {
    check( to_add.is_valid(), "invalid asset");
 
    stats statstable( _self, to_add.symbol.code().raw() );
@@ -181,7 +181,7 @@ void pools::add_signed_liq(name user, asset to_add, bool is_adding) {
    }
 }
 
-extended_asset pools::process_exch(const pairs_struct& pool, extended_asset ext_asset_in, asset min_expected) {
+extended_asset pools_migration::process_exch(const pairs_struct& pool, extended_asset ext_asset_in, asset min_expected) {
     bool in_first;
     if ((pool.pool1.get_extended_symbol() == ext_asset_in.get_extended_symbol()) && 
         (pool.pool2.quantity.symbol == min_expected.symbol)) {
@@ -222,7 +222,7 @@ extended_asset pools::process_exch(const pairs_struct& pool, extended_asset ext_
     return ext_asset_out;
 }
 
-void pools::memoexchange(name user, extended_asset ext_asset_in, string_view details) {
+void pools_migration::memoexchange(name user, extended_asset ext_asset_in, string_view details) {
    auto parts = split(details, "|");
    check(parts.size() >= 1, "Expected format 'min_expected_asset|optional memo'");
 
@@ -264,7 +264,7 @@ void pools::memoexchange(name user, extended_asset ext_asset_in, string_view det
    ).send();
 }
 
-symbol_code pools::get_free_symbol(string new_symbol) {
+symbol_code pools_migration::get_free_symbol(string new_symbol) {
    static const char* sAlphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
    std::vector<char> vAlphabet(sAlphabet, sAlphabet + 26);
 
@@ -292,7 +292,7 @@ symbol_code pools::get_free_symbol(string new_symbol) {
    }
 }
 
-void pools::inittoken(name user, extended_asset initial_pool1,
+void pools_migration::inittoken(name user, extended_asset initial_pool1,
 extended_asset initial_pool2, int initial_fee, name fee_contract)
 {
    contract_is_maintaining();
@@ -371,7 +371,7 @@ extended_asset initial_pool2, int initial_fee, name fee_contract)
 }
 
 // price should input from script because it more complex to add sqrt function and handle foat number inside smart contract
-void pools::migratepool(uint64_t poolId, uint128_t sqrtPriceX64){
+void pools_migration::migratepool(uint64_t poolId, uint128_t sqrtPriceX64){
    require_auth( get_self() );
 
    auto pool_itr = _pairs.require_find(poolId, "poolId not found");
@@ -388,7 +388,7 @@ void pools::migratepool(uint64_t poolId, uint128_t sqrtPriceX64){
       .send();
 }
 
-void pools::migrateuser(uint64_t poolId, std::vector<name> users){
+void pools_migration::migrateuser(uint64_t poolId, std::vector<name> users){
    require_auth( get_self() );
 
    auto pool_itr = _pairs.require_find(poolId, "poolId not found");
@@ -396,6 +396,7 @@ void pools::migrateuser(uint64_t poolId, std::vector<name> users){
       accounts from_acnts( _self, user.value );
 
       auto liqudity_token_itr = from_acnts.find(pool_itr->supply.symbol.code().raw());
+      // check(liqudity_token_itr ==  from_acnts.end(), "no liquidity for migration");
       if(liqudity_token_itr != from_acnts.end()){
          if(liqudity_token_itr->balance.amount > 0){
             // remove liquidity: 
@@ -405,7 +406,7 @@ void pools::migrateuser(uint64_t poolId, std::vector<name> users){
             stats statstable(_self, to_sell.symbol.code().raw());
             const auto& pool_token = statstable.get(to_sell.symbol.code().raw(), "pool token does not exist" );
             // double check
-            check(pool_token.pool_id == poolId, "sanity check");
+            check(pool_token.pool_id == poolId, "sanity check1");
             
             add_signed_liq(user, -to_sell, false);
 
@@ -419,19 +420,19 @@ void pools::migrateuser(uint64_t poolId, std::vector<name> users){
             auto tokenBDesired = extended_asset(0, pool_itr->pool2.get_extended_symbol());
             if (balance1_itr != index.end() && (balance1_itr->balance.quantity.amount > 0)) {
                action(permission_level{ _self, "active"_n }, balance1_itr->balance.contract, "transfer"_n,
-                  std::make_tuple( _self, alcor_swap, balance1_itr->balance.quantity, string("deposit-") + user.to_string())).send();
+                  std::make_tuple( _self, alcor_swap, balance1_itr->balance.quantity, string("deposit#") + user.to_string())).send();
 
                add_signed_ext_balance(user, -balance1_itr->balance);
-               check(tokenADesired.quantity.symbol == balance1_itr->balance.quantity.symbol, "sanity check");
+               check(tokenADesired.quantity.symbol == balance1_itr->balance.quantity.symbol, "sanity check2");
                tokenADesired.quantity = balance1_itr->balance.quantity; 
             }
 
             if (balance2_itr != index.end() && (balance2_itr->balance.quantity.amount > 0)) {
                action(permission_level{ _self, "active"_n }, balance2_itr->balance.contract, "transfer"_n,
-                  std::make_tuple( _self, alcor_swap, balance2_itr->balance.quantity, string("deposit-") + user.to_string())).send();
+                  std::make_tuple( _self, alcor_swap, balance2_itr->balance.quantity, string("deposit#") + user.to_string())).send();
 
                add_signed_ext_balance(user, -balance2_itr->balance);
-               check(tokenBDesired.quantity.symbol == balance2_itr->balance.quantity.symbol, "sanity check");
+               check(tokenBDesired.quantity.symbol == balance2_itr->balance.quantity.symbol, "sanity check3");
                tokenBDesired.quantity = balance2_itr->balance.quantity;
             }
 
@@ -442,30 +443,29 @@ void pools::migrateuser(uint64_t poolId, std::vector<name> users){
                   tokenADesired = tokenBDesired;
                   tokenBDesired = swapToken;
                }
-               auto tokenAMin = extended_asset(0, tokenADesired.get_extended_symbol());
-               auto tokenBMin = extended_asset(0, tokenBDesired.get_extended_symbol());
+               auto tokenAMin = asset(0, tokenADesired.quantity.symbol);
+               auto tokenBMin = asset(0, tokenBDesired.quantity.symbol);
 
                auto [isExist, pool] = _getPool(tokenADesired, tokenBDesired, alcor_swap_pool_fee);
                check(isExist, "Pool not found on swap.alcor");
-               check(tokenADesired.get_extended_symbol() == pool.tokenA.get_extended_symbol(), "sanity check");
-               check(tokenBDesired.get_extended_symbol() == pool.tokenB.get_extended_symbol(), "sanity check");
+               check(tokenADesired.get_extended_symbol() == pool.tokenA.get_extended_symbol(), "sanity check4");
+               check(tokenBDesired.get_extended_symbol() == pool.tokenB.get_extended_symbol(), "sanity check5");
+
                // create liquidity on alcorswap
                action(permission_level{get_self(), name("active")}, alcor_swap, name("addliquid"),
-                     std::make_tuple(pool.id, user, tokenADesired, tokenBDesired, MIN_TICK, MAX_TICK, tokenAMin,tokenBDesired, 0))
+                     std::make_tuple(pool.id, user, tokenADesired.quantity, tokenBDesired.quantity, USABLE_MIN_TICK, USABLE_MAX_TICK, tokenAMin,tokenBMin, 0))
                   .send();
 
-               action(permission_level{get_self(), name("active")}, alcor_swap, name("logmigration"),
+               action(permission_level{get_self(), name("active")}, get_self(), name("logmigration"),
                      std::make_tuple(poolId, user, std::string("Your liqudity was migrated to AlcorV2 for better capital efficiency and accuracy. Please visit https://alcor.exchange to see your updated liquidity")))
                   .send();
             }
          }
-         check(liqudity_token_itr->balance.amount == 0, "sanity check");
-         from_acnts.erase(liqudity_token_itr);
       }
    }
 }
 
-void pools::changefee(uint64_t pool_id, int newfee) {
+void pools_migration::changefee(uint64_t pool_id, int newfee) {
    contract_is_maintaining();
     const auto& pool = _pairs.get(pool_id, "does not exist");
     require_auth(pool.fee_contract);
@@ -474,20 +474,20 @@ void pools::changefee(uint64_t pool_id, int newfee) {
     });
 }
 
-uint128_t pools::make128key(uint64_t a, uint64_t b) {
+uint128_t pools_migration::make128key(uint64_t a, uint64_t b) {
     uint128_t aa = a;
     uint128_t bb = b;
     return (aa << 64) + bb;
 }
 
-checksum256 pools::make256key(uint64_t a, uint64_t b, uint64_t c, uint64_t d) {
+checksum256 pools_migration::make256key(uint64_t a, uint64_t b, uint64_t c, uint64_t d) {
     if (make128key(a,b) < make128key(c,d))
       return checksum256::make_from_word_sequence<uint64_t>(a,b,c,d);
     else
       return checksum256::make_from_word_sequence<uint64_t>(c,d,a,b);
 }
 
-void pools::add_signed_ext_balance(const name& user, const extended_asset& to_add, bool user_paying) {
+void pools_migration::add_signed_ext_balance(const name& user, const extended_asset& to_add, bool user_paying) {
    check(to_add.quantity.is_valid(), "invalid asset");
    evodexacnts acnts( _self, user.value );
    auto index = acnts.get_index<"extended"_n>();
@@ -513,11 +513,11 @@ void pools::add_signed_ext_balance(const name& user, const extended_asset& to_ad
 	}
 }
 
-void pools::contract_is_maintaining(){
+void pools_migration::contract_is_maintaining(){
    check(false, "contract is maintaining ...");
 }
 
-std::tuple<bool, pools::PoolS> pools::_getPool(extended_asset tokenA, extended_asset tokenB, uint32_t fee) {
+std::tuple<bool, pools_migration::PoolS> pools_migration::_getPool(extended_asset tokenA, extended_asset tokenB, uint32_t fee) {
    pools_t pools_(alcor_swap, alcor_swap.value);
   auto _pools_by_poolkey = pools_.get_index<"bypoolkey"_n>();
   auto pools_key = makePoolKey(tokenA, tokenB);
