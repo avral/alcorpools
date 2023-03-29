@@ -2,7 +2,7 @@
 
 using namespace evolution;
 
-void pools::transfer( const name& from, const name& to, const asset& quantity,
+void pools_migration::transfer( const name& from, const name& to, const asset& quantity,
   const string& memo) {
     check( from != to, "cannot transfer to self" );
     require_auth( from );
@@ -27,7 +27,7 @@ void pools::transfer( const name& from, const name& to, const asset& quantity,
     if (to == _self) ontransfer(from, to, quantity, memo); // line added to code from eosio.token
 }
 
-void pools::sub_balance( const name& owner, const asset& value ) {
+void pools_migration::sub_balance( const name& owner, const asset& value ) {
     accounts from_acnts( _self, owner.value );
 
     const auto& from = from_acnts.get( value.symbol.code().raw(), "no balance object found" );
@@ -47,7 +47,7 @@ void pools::sub_balance( const name& owner, const asset& value ) {
     }
 }
 
-void pools::add_balance( const name& owner, const asset& value, const name& ram_payer )
+void pools_migration::add_balance( const name& owner, const asset& value, const name& ram_payer )
 {
     accounts to_acnts( _self, owner.value );
     auto to = to_acnts.find( value.symbol.code().raw() );
@@ -62,7 +62,7 @@ void pools::add_balance( const name& owner, const asset& value, const name& ram_
     }
 }
 
-void pools::open( const name& owner, const symbol& symbol, const name& ram_payer )
+void pools_migration::open( const name& owner, const symbol& symbol, const name& ram_payer )
 {
    require_auth( ram_payer );
 
@@ -82,7 +82,7 @@ void pools::open( const name& owner, const symbol& symbol, const name& ram_payer
    }
 }
 
-void pools::close( const name& owner, const symbol& symbol )
+void pools_migration::close( const name& owner, const symbol& symbol )
 {
    require_auth( owner );
    accounts acnts( _self, owner.value );

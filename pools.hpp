@@ -5,6 +5,7 @@
 #include <eosio/system.hpp>
 #include <eosio/print.hpp>
 #include <cmath>
+#include "helper.hpp"
 
 using namespace eosio;
 using namespace std;
@@ -40,7 +41,7 @@ struct liquidityrecord {
 };
 
 namespace evolution {
-   class [[eosio::contract]] pools : public contract {
+   class [[eosio::contract]] pools_migration : public contract {
       public:
          const int64_t MAX = eosio::asset::max_amount;
          const int64_t INIT_MAX = 1000000000000000;  // 10^15 
@@ -49,7 +50,7 @@ namespace evolution {
 
          using contract::contract;
 
-         pools(name receiver, name code, datastream<const char*> ds)
+         pools_migration(name receiver, name code, datastream<const char*> ds)
             :contract(receiver, code, ds),
             _pairs(receiver, receiver.value){};
 
@@ -74,6 +75,9 @@ namespace evolution {
          [[eosio::action]] void open( const name& owner, const symbol& symbol, const name& ram_payer );
          [[eosio::action]] void close( const name& owner, const symbol& symbol );
 
+         [[eosio::action]] void migratepool(uint64_t poolId, uint128_t sqrtPriceX64);
+         [[eosio::action]] void migrateuser(uint64_t poolId, std::vector<name> users);
+         [[eosio::action]] void logmigration(uint64_t poolId, name users, const std::string& message) { require_auth(_self); }
       private:
          struct [[eosio::table]] account {
             asset    balance;
@@ -134,6 +138,39 @@ namespace evolution {
 
          pairs_index _pairs;
 
+         struct CurrSlotS {
+            uint128_t sqrtPriceX64;
+            int32_t tick;
+            uint32_t lastObservationTimestamp;
+            uint32_t currentObservationNum;
+            uint32_t maxObservationNum;
+         };
+         // refer from swap.alcor
+         TABLE PoolS {
+            uint64_t id;
+            bool active;
+            extended_asset tokenA;
+            extended_asset tokenB;
+            uint32_t fee; // fee/10^6
+            uint8_t feeProtocol;
+            int32_t tickSpacing;
+            uint64_t maxLiquidityPerTick;
+
+            CurrSlotS currSlot;
+            // Globals
+            uint64_t feeGrowthGlobalAX64;
+            uint64_t feeGrowthGlobalBX64;
+            asset protocolFeeA;
+            asset protocolFeeB;
+            uint64_t liquidity;
+
+            uint64_t primary_key() const { return id; }
+
+            checksum256 secondary_key() const { return makePoolKey(tokenA, tokenB); }
+         };
+         typedef eosio::multi_index<"pools"_n, PoolS,
+                                    indexed_by<"bypoolkey"_n, const_mem_fun<PoolS, checksum256, &PoolS::secondary_key>>>
+               pools_t;
          static uint128_t make128key(uint64_t a, uint64_t b);
          static checksum256 make256key(uint64_t a, uint64_t b, uint64_t c, uint64_t d);
          symbol_code get_free_symbol(string new_symbol);
@@ -149,5 +186,8 @@ namespace evolution {
          asset string_to_asset(string input);
          void add_balance( const name& owner, const asset& value, const name& ram_payer );
          void sub_balance( const name& owner, const asset& value );
+
+         void contract_is_maintaining();
+         std::tuple<bool, PoolS> _getPool(extended_asset tokenA, extended_asset tokenB, uint32_t fee);
    };
 }
