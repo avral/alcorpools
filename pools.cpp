@@ -457,7 +457,7 @@ void pools_migration::migrateuser(uint64_t poolId, std::vector<name> users){
                   .send();
 
                action(permission_level{get_self(), name("active")}, get_self(), name("logmigration"),
-                     std::make_tuple(poolId, user, std::string("Your liqudity was migrated to AlcorV2 for better capital efficiency and accuracy. Please visit https://alcor.exchange to see your updated liquidity")))
+                     std::make_tuple(poolId, user, std::string("Your liqudity was migrated to Alcor Swap V2 for better capital efficiency and accuracy. Please visit https://alcor.exchange/swap to see your updated liquidity")))
                   .send();
             }
          }
