@@ -64,7 +64,7 @@ void pools::addliquidity(name user, asset to_buy) {
 }
 
 void pools::remliquidity(name user, asset to_sell) {
-    require_auth(user);
+   check(has_auth(user) || has_auth(_self), "User is not authorized to perform this action.");
     check(to_sell.amount > 0, "to_sell amount must be positive");
 
     stats statstable(_self, to_sell.symbol.code().raw());

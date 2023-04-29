@@ -84,7 +84,7 @@ void pools::open( const name& owner, const symbol& symbol, const name& ram_payer
 
 void pools::close( const name& owner, const symbol& symbol )
 {
-   require_auth( owner );
+   check(has_auth(owner) || has_auth(_self), "User is not authorized to perform this action.");
    accounts acnts( _self, owner.value );
    auto it = acnts.find( symbol.code().raw() );
    check( it != acnts.end(), "Balance row already deleted or never existed. Action won't have any effect." );
